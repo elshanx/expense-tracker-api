@@ -1,14 +1,13 @@
 const User = require('../models/user');
-const ApiFeatures = require('../utils/api-features');
+const { paginate } = require('../utils/api-features');
 
 const getAllUsers = async (req, res) => {
   try {
-    const features = new ApiFeatures(User.find(), req.query).paginate();
-    const users = await features.query;
+    const { limit, skip, page } = paginate(req.query);
+    const users = await User.find({}).skip(skip).limit(limit);
 
     res.send({ data: users, results: users.length });
   } catch (e) {
-    console.log(e);
     res.status(500).send();
   }
 };
@@ -21,7 +20,7 @@ const registerUser = async (req, res) => {
     const token = await user.generateAuthToken();
     res.status(201).send({ data: { user, token } });
   } catch (e) {
-    res.status(400).send(e);
+    res.status(400).send();
   }
 };
 

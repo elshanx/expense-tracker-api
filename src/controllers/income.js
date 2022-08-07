@@ -1,40 +1,31 @@
 const Income = require('../models/income');
+const { paginate, filterByDate } = require('../utils/api-features');
 
 const { calculateIncome } = require('../utils/calculateIncome');
 
 const getAllIncomes = async (req, res) => {
+  let incomes;
+
+  const { limit, skip, page } = paginate(req.query);
+  const { from, to } = filterByDate(req.query);
+
   try {
-    let from;
-    let to;
-
-    if (req.query.from) {
-      from = new Date(req.query.from);
-      from.setHours(0, 0, 0, 0);
-      to = new Date();
-      to.setHours(23, 59, 59, 999);
-    }
-
-    if (req.query.to) {
-      to = new Date(req.query.to);
-      to.setHours(23, 59, 59, 999);
-    }
-
     if (from || to) {
-      const incomes = await Income.find({
+      incomes = await Income.find({
         createdAt: {
           $gte: from,
           $lte: to,
         },
-      });
-
-      res.send({ results: incomes.length, data: incomes });
+      })
+        .skip(skip)
+        .limit(limit);
+    } else {
+      incomes = await Income.find({}).skip(skip).limit(limit);
     }
-
-    const incomes = await Income.find({});
 
     res.send({ results: incomes.length, data: incomes });
   } catch (e) {
-    res.status(500).send();
+    res.status(500).send({ e: e.message });
   }
 };
 

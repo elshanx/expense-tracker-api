@@ -20,7 +20,13 @@ if (environment === 'development') {
 }
 
 app.use(cors());
-app.use(rateLimiter({ windowMs: 60 * 1000, max: 150 }));
+app.use(
+  rateLimiter({
+    windowMs: 60 * 1000,
+    max: 150,
+    message: 'Too many requests from this IP, please try again in an hour!',
+  }),
+);
 
 app.use('/api/users', userRouter);
 app.use('/api/income', incomeRouter);

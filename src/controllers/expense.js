@@ -14,7 +14,7 @@ const registerExpense = async (req, res) => {
 const getAllExpenses = async (req, res) => {
   try {
     const expenses = await Expense.find({});
-    res.send({ totalRecord: expenses.count, data: expenses });
+    res.send({ results: expenses.count, data: expenses });
   } catch (e) {
     res.status(500).send();
   }
@@ -23,7 +23,7 @@ const getAllExpenses = async (req, res) => {
 const getUserExpenses = async (req, res) => {
   try {
     const expenses = await Expense.find({ user: req.params.id });
-    res.send({ totalRecord: expenses.count, data: expenses });
+    res.send({ results: expenses.count, data: expenses });
   } catch (e) {
     res.status(500).send();
   }

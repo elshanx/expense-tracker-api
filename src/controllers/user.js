@@ -1,13 +1,14 @@
 const User = require('../models/user');
+const ApiFeatures = require('../utils/api-features');
 
 const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({});
-    users.forEach(user => {
-      console.log(user);
-    });
-    res.send(users);
+    const features = new ApiFeatures(User.find(), req.query).paginate();
+    const users = await features.query;
+
+    res.send({ data: users, results: users.length });
   } catch (e) {
+    console.log(e);
     res.status(500).send();
   }
 };
@@ -18,7 +19,7 @@ const registerUser = async (req, res) => {
   try {
     await user.save();
     const token = await user.generateAuthToken();
-    res.status(201).send({ user, token });
+    res.status(201).send({ data: { user, token } });
   } catch (e) {
     res.status(400).send(e);
   }
@@ -29,7 +30,7 @@ const loginUser = async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findByCredentials(email, password);
     const token = await user.generateAuthToken();
-    res.send({ user, token });
+    res.send({ data: { user, token } });
   } catch (e) {
     res.status(400).send();
   }
@@ -58,16 +59,9 @@ const logoutAllSessions = async (req, res) => {
 
 const getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).populate('incomes');
-
-    res.send({
-      data: {
-        user,
-        incomes: user.incomes,
-      },
-    });
+    const user = await User.findById(req.user._id).populate(['incomes', 'expenses']);
+    res.send({ data: user });
   } catch (e) {
-    console.log(e);
     res.status(500).send();
   }
 };
@@ -80,7 +74,7 @@ const getUser = async (req, res) => {
       return res.status(404).send({ error: 'User not found!' });
     }
 
-    res.send(user);
+    res.send({ data: user });
   } catch (e) {
     res.status(500);
   }
@@ -98,7 +92,7 @@ const updateUser = async (req, res) => {
   try {
     updates.forEach(update => (req.user[update] = req.body[update]));
     await req.user.save();
-    res.send(req.user);
+    res.send({ data: req.user });
   } catch (e) {
     res.status(400).send(e);
   }
@@ -107,7 +101,7 @@ const updateUser = async (req, res) => {
 const deleteCurrentUser = async (req, res) => {
   try {
     await req.user.remove();
-    res.send(req.user);
+    res.send({ data: req.user });
   } catch (e) {
     res.status(500).send();
   }

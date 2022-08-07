@@ -27,14 +27,13 @@ const getAllIncomes = async (req, res) => {
         },
       });
 
-      res.send({ totalRecord: incomes.length, data: incomes });
+      res.send({ results: incomes.length, data: incomes });
     }
 
     const incomes = await Income.find({});
 
-    res.send({ totalRecord: incomes.length, data: incomes });
+    res.send({ results: incomes.length, data: incomes });
   } catch (e) {
-    console.log(e);
     res.status(500).send();
   }
 };
@@ -44,16 +43,24 @@ const registerIncome = async (req, res) => {
     const newIncome = calculateIncome({ ...req.body, owner: req.user._id });
     await newIncome.save();
 
-    res.status(201).send(newIncome);
+    res.status(201).send({ data: newIncome });
   } catch (error) {
     res.status(400).send({ error });
   }
 };
 
 const updateIncome = async (req, res) => {
+  const updates = Object.keys(req.body);
+  const allowedUpdates = ['income', 'debt', 'surplus'];
+  const isValidOperation = updates.every(update => allowedUpdates.includes(update));
+
+  if (!isValidOperation) {
+    return res.status(400).send({ error: 'Invalid updates!' });
+  }
+
   try {
     const income = await Income.findById(req.params.id);
-    res.send(income);
+    res.send({ data: income });
   } catch (e) {
     res.status(500).send();
   }
